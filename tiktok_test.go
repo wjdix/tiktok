@@ -68,3 +68,20 @@ func TestTickerTicksMultipleTimes(t *testing.T) {
 		test.Expect(ticks).ToEqual(2)
 	}
 }
+
+func TestTickerTicksMultipleTimeWithOneTickCall(t *testing.T) {
+	test := quiz.Test(t)
+	shutDownChannel := make(chan int)
+	finishedChannel := make(chan int)
+	ticker := NewTicker(3)
+	go countTicks(ticker.C, shutDownChannel, finishedChannel)
+
+	ticker.Tick(6)
+	var ticks int
+
+	shutDownChannel <- 0
+	select {
+	case ticks = <-finishedChannel:
+		test.Expect(ticks).ToEqual(2)
+	}
+}

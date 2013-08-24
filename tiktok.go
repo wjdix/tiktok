@@ -23,7 +23,7 @@ func NewTicker(d int) *ControllableTicker {
 
 func (ticker *ControllableTicker) Tick(d int) {
 	ticker.elapsed = d + ticker.elapsed
-	if ticker.elapsed >= ticker.interval {
+	for ticker.elapsed >= ticker.interval {
 		ticker.elapsed = ticker.elapsed - ticker.interval
 		ticker.c <- time.Now()
 	}
