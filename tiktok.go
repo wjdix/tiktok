@@ -4,27 +4,55 @@ import (
 	"time"
 )
 
+var tickers []ControllableTicker
+
 type ControllableTicker struct {
-	C        <-chan time.Time
-	c        chan time.Time
-	interval int
-	elapsed  int
+	C            <-chan time.Time
+	c            chan time.Time
+	interval     time.Duration
+	elapsed      time.Duration
+	elapsedChan  chan time.Duration
+	shutdownChan chan int
+	ticked       int
 }
 
-func NewTicker(d int) *ControllableTicker {
+func NewTicker(d time.Duration) ControllableTicker {
 	c := make(chan time.Time)
-	return &ControllableTicker{
-		C:        c,
-		interval: d,
-		c:        c,
-		elapsed:  0,
+	elapsedChan := make(chan time.Duration)
+	shutdownChan := make(chan int)
+	ticker := ControllableTicker{
+		C:            c,
+		interval:     d,
+		c:            c,
+		elapsedChan:  elapsedChan,
+		shutdownChan: shutdownChan,
+	}
+
+	tickers = append(tickers, ticker)
+	go ticker.listen()
+	return ticker
+}
+
+func (ticker *ControllableTicker) listen() {
+	for {
+		select {
+		case elapsed := <-ticker.elapsedChan:
+			ticker.elapsed += elapsed
+			neededTicks := ticker.elapsed / ticker.interval
+			for int(neededTicks) > ticker.ticked {
+				ticker.ticked++
+				ticker.c <- time.Now()
+			}
+		case <-ticker.shutdownChan:
+			return
+		}
 	}
 }
 
-func (ticker *ControllableTicker) Tick(d int) {
-	ticker.elapsed = d + ticker.elapsed
-	for ticker.elapsed >= ticker.interval {
-		ticker.elapsed = ticker.elapsed - ticker.interval
-		ticker.c <- time.Now()
-	}
+func (ticker *ControllableTicker) Tick(d time.Duration) {
+	ticker.elapsedChan <- d
+}
+
+func (ticker *ControllableTicker) ShutDown() {
+	ticker.shutdownChan <- 0
 }
