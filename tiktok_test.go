@@ -44,6 +44,7 @@ func TestTickerTicksAfterDuration(t *testing.T) {
 
 	ticker.Tick(5)
 	shutDownChannel <- 0
+	ticker.ShutDown()
 	select {
 	case ticks := <-finishedChannel:
 		test.Expect(ticks).ToEqual(1)
@@ -61,6 +62,7 @@ func TestTickerTicksMultipleTimes(t *testing.T) {
 	ticker.Tick(4)
 
 	shutDownChannel <- 0
+	ticker.ShutDown()
 	select {
 	case ticks := <-finishedChannel:
 		test.Expect(ticks).ToEqual(2)
@@ -80,6 +82,24 @@ func TestTickerTicksMultipleTimeWithOneTickCall(t *testing.T) {
 	shutDownChannel <- 0
 	select {
 	case ticks := <-finishedChannel:
-		test.Expect(ticks).ToBeGreaterThan(2)
+		test.Expect(ticks).ToEqual(2)
 	}
+}
+
+func TestTickerIsTickedByPackageLevelTick(t *testing.T) {
+	test := quiz.Test(t)
+	shutDownChannel := make(chan int)
+	finishedChannel := make(chan int)
+	ticker := NewTicker(3)
+	go countTicks(ticker.C, shutDownChannel, finishedChannel)
+
+	Tick(4)
+
+	ticker.ShutDown()
+	shutDownChannel <- 0
+	select {
+	case ticks := <-finishedChannel:
+		test.Expect(ticks).ToEqual(1)
+	}
+
 }

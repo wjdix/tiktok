@@ -55,4 +55,20 @@ func (ticker *ControllableTicker) Tick(d time.Duration) {
 
 func (ticker *ControllableTicker) ShutDown() {
 	ticker.shutdownChan <- 0
+	removeTicker(ticker)
+}
+
+func removeTicker(ticker *ControllableTicker) {
+	for i, present := range tickers {
+		if *ticker == present {
+			tickers = append(tickers[:i], tickers[i+1:]...)
+			return
+		}
+	}
+}
+
+func Tick(d time.Duration) {
+	for _, ticker := range tickers {
+		ticker.Tick(d)
+	}
 }
