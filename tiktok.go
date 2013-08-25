@@ -80,3 +80,7 @@ func Tick(d time.Duration) {
 		ticker.Tick(d)
 	}
 }
+
+func ClearTickers() {
+	tickers = []ControllableTicker{}
+}
