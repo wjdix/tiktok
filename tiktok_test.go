@@ -101,5 +101,4 @@ func TestTickerIsTickedByPackageLevelTick(t *testing.T) {
 	case ticks := <-finishedChannel:
 		test.Expect(ticks).ToEqual(1)
 	}
-
 }

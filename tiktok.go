@@ -58,6 +58,14 @@ func (ticker *ControllableTicker) ShutDown() {
 	removeTicker(ticker)
 }
 
+func (ticker ControllableTicker) Stop() {
+	ticker.ShutDown()
+}
+
+func (ticker ControllableTicker) Chan() <-chan time.Time {
+	return ticker.C
+}
+
 func removeTicker(ticker *ControllableTicker) {
 	for i, present := range tickers {
 		if *ticker == present {
